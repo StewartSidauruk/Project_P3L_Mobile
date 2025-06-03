@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
 
 class HomePenitip extends StatefulWidget {
   const HomePenitip({super.key});
@@ -17,11 +19,41 @@ class _HomePenitipState extends State<HomePenitip> {
   @override
   void initState() {
     super.initState();
-    NotifikasiService.fetchNotifikasi().then((data) {
+
+    _fetchNotifikasi();
+
+    // FCM listener saat aplikasi aktif
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        final title = message.notification!.title ?? "Notifikasi";
+        final body = message.notification!.body ?? "Ada pesan masuk.";
+
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Tutup"),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _fetchNotifikasi() async {
+    try {
+      final data = await NotifikasiService.fetchNotifikasi();
       setState(() {
         _notifications = data;
       });
-    });
+    } catch (e) {
+      print('❌ Gagal mengambil notifikasi: $e');
+    }
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -43,11 +75,11 @@ class _HomePenitipState extends State<HomePenitip> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,

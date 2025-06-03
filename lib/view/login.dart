@@ -8,6 +8,10 @@ import 'package:flutter_application_p3l/view/home_pembeli.dart';
 import 'package:flutter_application_p3l/view/home_penitip.dart';
 import 'package:flutter_application_p3l/view/home_hunter.dart';
 import 'package:flutter_application_p3l/view/home_kurir.dart';
+import 'package:flutter_application_p3l/services/notifikasi_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -191,4 +195,27 @@ class _LoginViewState extends State<LoginView> {
       throw 'Could not launch $url';
     }
   }
+
+  Future<void> saveFcmToken() async {
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  final storage = FlutterSecureStorage();
+  final authToken = await storage.read(key: 'token');
+
+  if (authToken != null && fcmToken != null) {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8000/api/simpan-token'),
+      headers: {
+        'Authorization': 'Bearer $authToken',
+        'Accept': 'application/json',
+      },
+      body: {'expo_push_token': fcmToken},
+    );
+
+    print("📡 Kirim token status: ${response.statusCode}");
+    print("📡 Body: ${response.body}");
+  } else {
+    print("❌ Token atau auth belum tersedia.");
+  }
+}
+
 }

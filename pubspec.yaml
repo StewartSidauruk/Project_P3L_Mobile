@@ -31,8 +31,10 @@ dependencies:
   flutter_dotenv: ^5.0.2
   decimal: ^2.0.0
   flutter_secure_storage: ^9.2.4
-  firebase_core: ^2.0.0
-  firebase_messaging: ^14.0.0
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.10
+  flutter_local_notifications: 13.0.0
+  permission_handler: ^11.0.0
 
 dev_dependencies:
   flutter_test:

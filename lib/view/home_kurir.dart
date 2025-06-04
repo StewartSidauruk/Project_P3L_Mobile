@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
@@ -114,14 +114,23 @@ Future<void> _initApp() async {
     const Center(child: Text("Profil Kurir")),
   ];
 
+  Future<void> _logout(BuildContext context) async {
+    await AuthService.logout();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginView()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_application_p3l/services/notifikasi_service.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 class HomePembeli extends StatefulWidget {
   const HomePembeli({super.key});
@@ -11,10 +17,137 @@ class HomePembeli extends StatefulWidget {
 
 class _HomePembeliState extends State<HomePembeli> {
   int _selectedIndex = 0;
+List<String> _notifications = [];
+
+  Future<void> _refreshNotifications() async {
+    final data = await NotifikasiService.fetchNotifikasi();
+    setState(() {
+      _notifications = data;
+    });
+  }
+
+  Future<void> requestNotificationPermission() async {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+  }
+
+  Future<void> initLocalNotifications() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel',
+      'Notifikasi Penting',
+      description: 'Channel untuk notifikasi penting',
+      importance: Importance.high,
+    );
+
+    final AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
+
+  @override
+void initState() {
+  super.initState();
+  _initApp(); // panggil setup
+}
+
+Future<void> _initApp() async {
+  await initLocalNotifications();
+
+  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Handle saat notifikasi datang (foreground)
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('🔥 FCM diterima: ${message.toMap()}');
+
+    String? title = message.notification?.title ?? message.data['title'];
+    String? body = message.notification?.body ?? message.data['body'];
+
+    if (title != null && body != null) {
+      print('📣 Memunculkan notifikasi tray');
+
+      flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'Notifikasi Penting',
+            channelDescription: 'Channel untuk notifikasi penting',
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+        ),
+      );
+    }
+  });
+
+  // Handle saat user klik notifikasi tray (app background/resumed)
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    String? title = message.notification?.title ?? message.data['title'];
+    String? body = message.notification?.body ?? message.data['body'];
+
+    if (title != null && body != null) {
+      _showNotificationDialog(title, body);
+    }
+  });
+
+  // Handle saat app dibuka dari keadaan terminated lewat notifikasi
+  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    String? title = initialMessage.notification?.title ?? initialMessage.data['title'];
+    String? body = initialMessage.notification?.body ?? initialMessage.data['body'];
+
+    if (title != null && body != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showNotificationDialog(title!, body!);
+      });
+    }
+  }
+}
+
+void _showNotificationDialog(String title, String body) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text(title),
+      content: Text(body),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Tutup"),
+        ),
+      ],
+    ),
+  );
+}
+
+  Future<void> _logout(BuildContext context) async {
+    await AuthService.logout(); // ✅ panggil method dari auth.dart
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginView()),
+      (route) => false,
+    );
+  }
 
   final List<Widget> _pages = [
     const Center(child: Text("Beranda Pembeli")),
-    const Center(child: Text("Histori Pesanan")),
+    const Center(child: Text("Daftar Barang")),
+    const Center(child: Text("Profil")),
   ];
 
   @override
@@ -56,8 +189,61 @@ class _HomePembeliState extends State<HomePembeli> {
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
       title: _buildSearchBar(),
-      actions: const [
-        Icon(Icons.notifications_none, color: Colors.white),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_none, color: Colors.white),
+          onPressed: () async {
+            await _refreshNotifications();
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("Notifikasi"),
+                content: _notifications.isEmpty
+                    ? const Text("Tidak ada notifikasi saat ini.")
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: _notifications.map((notif) => ListTile(
+                          leading: const Icon(Icons.notifications),
+                          title: Text(notif),
+                        )).toList(),
+                      ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Tutup"),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.white),
+          tooltip: 'Logout',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Konfirmasi Logout'),
+                content: const Text('Anda yakin ingin logout?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _logout(context);
+                    },
+                    child: const Text('Logout'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }

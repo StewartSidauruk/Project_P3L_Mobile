@@ -96,7 +96,7 @@ class AuthService {
         if (response.statusCode == 200) {
           print("✅ Token FCM berhasil dihapus dari server untuk role $role.");
         } else {
-          print("⚠ Gagal logout: ${response.body}");
+          print("⚠️ Gagal logout: ${response.body}");
         }
       } catch (e) {
         print("❌ Error saat logout: $e");

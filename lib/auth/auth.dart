@@ -12,6 +12,14 @@ class AuthService {
     required String password,
   }) async {
     try {
+      // 🧹 Hapus token FCM lama dari device sebelum login
+      try {
+        await FirebaseMessaging.instance.deleteToken();
+        print("🧹 Token FCM lama dihapus sebelum login");
+      } catch (e) {
+        print("❌ Gagal hapus token FCM lama: $e");
+      }
+
       final response = await http.post(
         Uri.parse("$_baseUrl/login"),
         headers: {
@@ -26,24 +34,27 @@ class AuthService {
 
       if (response.statusCode == 200 && data['success'] == true) {
         await storage.write(key: 'token', value: data['token']);
-        await storage.write(key: 'role', value: data['role']);
+        await storage.write(key: 'role', value: data['role']); // simpan role: 'penitip', 'pembeli', dll
 
-        // Kirim token FCM setelah login berhasil
+        // 📲 Ambil token FCM baru
         final fcmToken = await FirebaseMessaging.instance.getToken();
-        print("📲 FCM token: $fcmToken");
+        print("📲 FCM token baru: $fcmToken");
 
         if (fcmToken != null) {
-          final tokenResponse = await http.post(
-            Uri.parse("$_baseUrl/simpan-token"),
-            headers: {
-              "Authorization": "Bearer ${data['token']}",
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-            },
-            body: jsonEncode({'fcm_token': fcmToken}),
-          );
+            final role = data['role']; // pastikan role disimpan oleh backend
+            final fcmUrl = "$_baseUrl/$role/simpan-token";
 
-          print("✅ Token simpan response: ${tokenResponse.body}");
+            final tokenResponse = await http.post(
+                Uri.parse(fcmUrl),
+                headers: {
+                    "Authorization": "Bearer ${data['token']}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: jsonEncode({'fcm_token': fcmToken}),
+            );
+
+            print("✅ Token FCM baru dikirim: ${tokenResponse.body}");
         }
 
         return {
@@ -54,41 +65,51 @@ class AuthService {
       } else {
         return {
           'status': 'error',
-          'message': data['message'] ?? 'Login gagal'
+          'message': data['message'] ?? 'Login gagal',
         };
       }
     } catch (e) {
       print('Login error: $e');
       return {
         'status': 'error',
-        'message': 'Terjadi kesalahan jaringan atau server'
+        'message': 'Terjadi kesalahan jaringan atau server',
       };
     }
   }
 
-   static Future<void> logout() async {
+  static Future<void> logout() async {
     final token = await storage.read(key: 'token');
+    final role = await storage.read(key: 'role');
 
-    if (token != null) {
+    if (token != null && role != null) {
       try {
+        final logoutUrl = "$_baseUrl/$role/logout-mobile";
+
         final response = await http.post(
-          Uri.parse("$_baseUrl/logout-mobile"),
+          Uri.parse(logoutUrl),
           headers: {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
           },
         );
+
         if (response.statusCode == 200) {
-          print("✅ Token FCM berhasil dihapus dari server.");
+          print("✅ Token FCM berhasil dihapus dari server untuk role $role.");
         } else {
-          print("⚠️ Gagal menghapus token FCM di server: ${response.body}");
+          print("⚠️ Gagal logout: ${response.body}");
         }
       } catch (e) {
         print("❌ Error saat logout: $e");
       }
     }
 
-    // Baru hapus semua dari local
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+      print("🧹 Token FCM dihapus dari device");
+    } catch (e) {
+      print("❌ Gagal menghapus token FCM di device: $e");
+    }
+
     await storage.deleteAll();
   }
 

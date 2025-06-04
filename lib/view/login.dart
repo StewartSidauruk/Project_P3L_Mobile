@@ -8,6 +8,8 @@ import 'package:flutter_application_p3l/view/home_pembeli.dart';
 import 'package:flutter_application_p3l/view/home_penitip.dart';
 import 'package:flutter_application_p3l/view/home_hunter.dart';
 import 'package:flutter_application_p3l/view/home_kurir.dart';
+import 'package:flutter_application_p3l/main.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -80,7 +82,6 @@ class _LoginViewState extends State<LoginView> {
                         final response = await AuthService.login(
                           email: emailController.text,
                           password: passwordController.text,
-                          role: selectedValue,
                         );
 
                         if (response['status'] == 'success' && mounted) {
@@ -100,13 +101,8 @@ class _LoginViewState extends State<LoginView> {
                             );
                           }
                         } else {
-                          // 🔔 Menampilkan notifikasi error jika login gagal
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(response['message'] ?? 'Login gagal'),
-                              backgroundColor: Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                            SnackBar(content: Text(response['message'] ?? 'Login gagal')),
                           );
                         }
                       }

@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
 
 import 'view/login.dart';
 import 'view/home_pembeli.dart';
@@ -19,7 +20,40 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print('📥 [BG] Notifikasi masuk: ${message.toMap()}');
+
+  String? title = message.notification?.title ?? message.data['title'];
+  String? body = message.notification?.body ?? message.data['body'];
+
+  print('💡 [BG Handler] Title: $title, Body: $body'); // <-- Tambahkan ini
+
+  if (title != null && body != null) {
+    print('📣 [BG Handler] Memanggil flutterLocalNotificationsPlugin.show'); // <-- Tambahkan ini
+    try {
+       flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'Notifikasi Penting',
+            channelDescription: 'Channel untuk notifikasi penting',
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+        ),
+      );
+      print('✅ [BG Handler] flutterLocalNotificationsPlugin.show BERHASIL dipanggil'); // <-- Tambahkan ini
+    } catch (e) {
+       print('❌ [BG Handler] Error saat memanggil show: $e'); // <-- Tambahkan ini
+    }
+  } else {
+     print('⚠️ [BG Handler] Title atau Body kosong, tidak menampilkan notifikasi lokal.'); // <-- Tambahkan ini
+  }
 }
+
+
 
 /// ✅ Setup notifikasi channel Android
 Future<void> setupFlutterNotifications() async {
@@ -42,6 +76,29 @@ Future<void> setupFlutterNotifications() async {
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 }
+
+Future<void> simpanTokenFcmKeBackend() async {
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  final jwt = await storage.read(key: 'token');
+
+  if (fcmToken != null && jwt != null) {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8000/api/simpan-token'),
+      headers: {
+        'Authorization': 'Bearer $jwt',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'fcm_token': fcmToken}),
+    );
+    if (response.statusCode == 200) {
+      print("✅ FCM token berhasil dikirim ulang");
+    } else {
+      print("❌ Gagal kirim FCM token: ${response.body}");
+    }
+  }
+}
+
 
 /// ✅ Minta izin notifikasi (Android 13+)
 Future<void> requestNotificationPermission() async {

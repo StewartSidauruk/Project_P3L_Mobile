@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -100,8 +101,7 @@ Future<void> _initApp() async {
 
 
   Future<void> _logout(BuildContext context) async {
-    final storage = FlutterSecureStorage();
-    await storage.deleteAll();
+    await AuthService.logout(); // ✅ panggil method dari auth.dart
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginView()),

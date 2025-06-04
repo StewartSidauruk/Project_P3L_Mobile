@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
 import 'login.dart';
 
 class HomeKurir extends StatefulWidget {
@@ -18,14 +18,23 @@ class _HomeKurirState extends State<HomeKurir> {
     const Center(child: Text("Profil Kurir")),
   ];
 
+  Future<void> _logout(BuildContext context) async {
+    await AuthService.logout();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginView()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
@@ -46,7 +55,36 @@ class _HomeKurirState extends State<HomeKurir> {
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
-          onPressed: () {},
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notifikasi belum tersedia')));
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.white),
+          tooltip: 'Logout',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Konfirmasi Logout'),
+                content: const Text('Anda yakin ingin logout?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _logout(context);
+                    },
+                    child: const Text('Logout'),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ],
     );

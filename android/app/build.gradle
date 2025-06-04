@@ -7,14 +7,14 @@ plugins {
 }
 
 android {
-    namespace = "com.example.flutter_application_p3l"
+    namespace "com.example.flutter_application_p3l"
 
     // ✅ Gunakan SDK 35 secara eksplisit
     compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.example.flutter_application_p3l"
+        applicationId "com.example.flutter_application_p3l"
         minSdk = flutter.minSdkVersion
         targetSdk = 35  // ✅ Sesuaikan juga target SDK
         versionCode = flutter.versionCode

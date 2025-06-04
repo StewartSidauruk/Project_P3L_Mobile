@@ -41,20 +41,20 @@ class AuthService {
         print("📲 FCM token baru: $fcmToken");
 
         if (fcmToken != null) {
-            final role = data['role']; // pastikan role disimpan oleh backend
-            final fcmUrl = "$_baseUrl/$role/simpan-token";
+          final role = data['role']; // pastikan role disimpan oleh backend
+          final fcmUrl = "$_baseUrl/$role/simpan-token";
 
-            final tokenResponse = await http.post(
-                Uri.parse(fcmUrl),
-                headers: {
-                    "Authorization": "Bearer ${data['token']}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                body: jsonEncode({'fcm_token': fcmToken}),
-            );
+          final tokenResponse = await http.post(
+            Uri.parse(fcmUrl),
+            headers: {
+              "Authorization": "Bearer ${data['token']}",
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: jsonEncode({'fcm_token': fcmToken}),
+          );
 
-            print("✅ Token FCM baru dikirim: ${tokenResponse.body}");
+          print("✅ Token FCM baru dikirim: ${tokenResponse.body}");
         }
 
         return {

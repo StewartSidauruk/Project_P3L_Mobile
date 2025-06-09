@@ -167,10 +167,25 @@ class _HomePembeliState extends State<HomePembeli> {
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+        onTap: (index) async {
+          if (index == 3) {
+            final storage = FlutterSecureStorage();
+            await storage.deleteAll();
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginView()),
+                (route) => false,
+              );
+            }
+          }else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ListMerchandise()),
+            );
+          }else {
+            setState(() => _selectedIndex = index);
+          }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

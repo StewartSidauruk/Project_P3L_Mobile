@@ -177,7 +177,12 @@ class _HomePembeliState extends State<HomePembeli> {
                 (route) => false,
               );
             }
-          } else {
+          }else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ListMerchandise()),
+            );
+          }else {
             setState(() => _selectedIndex = index);
           }
         },

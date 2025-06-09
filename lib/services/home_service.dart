@@ -7,11 +7,13 @@ class HomeService {
   static Future<List<dynamic>> fetchBarang() async {
     final response = await http.get(Uri.parse('$baseUrl/barang'));
     if (response.statusCode == 200) {
+      print('RESPONSE BODY: ${response.body}'); // ✅ Tambahkan ini
       return json.decode(response.body);
     } else {
       throw Exception('Gagal memuat data barang');
     }
   }
+
 
   static Future<List<dynamic>> fetchKategori() async {
     final response = await http.get(Uri.parse('$baseUrl/kategori'));

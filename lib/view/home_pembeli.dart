@@ -7,7 +7,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:flutter_application_p3l/services/home_service.dart';
+import 'package:flutter_application_p3l/view/list_merchandise.dart';
+import 'package:intl/intl.dart';
 
+final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 class HomePembeli extends StatefulWidget {
@@ -157,14 +160,14 @@ class _HomePembeliState extends State<HomePembeli> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: _selectedIndex < 2 ? _pages[_selectedIndex] : null,
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
         onTap: (index) async {
-          if (index == 2) {
+          if (index == 3) {
             final storage = FlutterSecureStorage();
             await storage.deleteAll();
             if (mounted) {
@@ -180,6 +183,7 @@ class _HomePembeliState extends State<HomePembeli> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Merchandise',),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Pesanan'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
@@ -281,13 +285,13 @@ class _HomePembeliState extends State<HomePembeli> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          SizedBox(
-            height: 180,
+          AspectRatio(
+            aspectRatio: 3 / 1, // or use 3 / 1 for panorama-like
             child: PageView(
               children: [
-                _carouselItem('assets/banner1.jpg'),
-                _carouselItem('assets/banner2.jpg'),
-                _carouselItem('assets/banner3.jpg'),
+                _carouselItem('images/banner1.jpg'),
+                _carouselItem('images/banner2.jpg'),
+                _carouselItem('images/banner3.jpg'),
               ],
             ),
           ),
@@ -307,7 +311,11 @@ class _HomePembeliState extends State<HomePembeli> {
   Widget _carouselItem(String imagePath) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.asset(imagePath, fit: BoxFit.cover),
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.cover,  // fills the space without distortion
+        width: double.infinity,
+      ),
     );
   }
 
@@ -319,20 +327,47 @@ class _HomePembeliState extends State<HomePembeli> {
         itemCount: kategori.length,
         itemBuilder: (context, index) {
           final item = kategori[index];
+          final imageUrl = 'http://10.0.2.2:8000/images/${Uri.encodeComponent(item['gambar'])}';
+
           return Container(
             width: 100,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: Colors.green[50],
+              color: Color(0xFFE1DDD2),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.green.shade700, // ✅ border color
+                width: 1.5,                    // ✅ border thickness
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             padding: const EdgeInsets.all(8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.category, size: 30, color: Colors.green),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 5),
-                Text(item['kategori'], style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+                Text(
+                  item['kategori'],
+                  style: const TextStyle(fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           );
@@ -365,7 +400,7 @@ class _HomePembeliState extends State<HomePembeli> {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(imageUrl, height: 100, width: double.infinity, fit: BoxFit.cover),
+                child: Image.network(imageUrl, height: 160, width: double.infinity, fit: BoxFit.cover),
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -373,7 +408,14 @@ class _HomePembeliState extends State<HomePembeli> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text("Rp${item['harga_barang']}", style: const TextStyle(color: Colors.green)),
+                child: Text(
+                  formatter.format(item['harga_barang']),
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ],
           ),

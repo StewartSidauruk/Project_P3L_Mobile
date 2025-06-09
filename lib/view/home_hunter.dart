@@ -114,7 +114,6 @@ Future<void> _initApp() async {
     const Center(child: Text("Profil Hunter")),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

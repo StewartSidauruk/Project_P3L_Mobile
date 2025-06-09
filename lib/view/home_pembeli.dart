@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
+import 'package:flutter_application_p3l/services/home_service.dart';
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 class HomePembeli extends StatefulWidget {
@@ -17,13 +19,13 @@ class HomePembeli extends StatefulWidget {
 
 class _HomePembeliState extends State<HomePembeli> {
   int _selectedIndex = 0;
-List<String> _notifications = [];
+  List<String> _notifications = [];
+  List<dynamic> kategori = [];
+  List<dynamic> barang = [];
 
   Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
-    setState(() {
-      _notifications = data;
-    });
+    setState(() => _notifications = data);
   }
 
   Future<void> requestNotificationPermission() async {
@@ -52,112 +54,112 @@ List<String> _notifications = [];
         ?.createNotificationChannel(channel);
   }
 
-  @override
-void initState() {
-  super.initState();
-  _initApp(); // panggil setup
-}
+  Future<void> _initApp() async {
+    await initLocalNotifications();
+    await loadHomeData();
 
-Future<void> _initApp() async {
-  await initLocalNotifications();
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final title = message.notification?.title ?? message.data['title'];
+      final body = message.notification?.body ?? message.data['body'];
 
-  // Handle saat notifikasi datang (foreground)
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('🔥 FCM diterima: ${message.toMap()}');
-
-    String? title = message.notification?.title ?? message.data['title'];
-    String? body = message.notification?.body ?? message.data['body'];
-
-    if (title != null && body != null) {
-      print('📣 Memunculkan notifikasi tray');
-
-      flutterLocalNotificationsPlugin.show(
-        message.hashCode,
-        title,
-        body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'high_importance_channel',
-            'Notifikasi Penting',
-            channelDescription: 'Channel untuk notifikasi penting',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+      if (title != null && body != null) {
+        flutterLocalNotificationsPlugin.show(
+          message.hashCode,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'high_importance_channel',
+              'Notifikasi Penting',
+              channelDescription: 'Channel untuk notifikasi penting',
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+            ),
           ),
-        ),
-      );
-    }
-  });
+        );
+      }
+    });
 
-  // Handle saat user klik notifikasi tray (app background/resumed)
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    String? title = message.notification?.title ?? message.data['title'];
-    String? body = message.notification?.body ?? message.data['body'];
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final title = message.notification?.title ?? message.data['title'];
+      final body = message.notification?.body ?? message.data['body'];
 
-    if (title != null && body != null) {
-      _showNotificationDialog(title, body);
-    }
-  });
+      if (title != null && body != null) {
+        _showNotificationDialog(title, body);
+      }
+    });
 
-  // Handle saat app dibuka dari keadaan terminated lewat notifikasi
-  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-  if (initialMessage != null) {
-    String? title = initialMessage.notification?.title ?? initialMessage.data['title'];
-    String? body = initialMessage.notification?.body ?? initialMessage.data['body'];
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      final title = initialMessage.notification?.title ?? initialMessage.data['title'];
+      final body = initialMessage.notification?.body ?? initialMessage.data['body'];
 
-    if (title != null && body != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showNotificationDialog(title!, body!);
-      });
+      if (title != null && body != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showNotificationDialog(title, body);
+        });
+      }
     }
   }
-}
 
-void _showNotificationDialog(String title, String body) {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text(title),
-      content: Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Tutup"),
-        ),
-      ],
-    ),
-  );
-}
-
-  Future<void> _logout(BuildContext context) async {
-    await AuthService.logout(); // ✅ panggil method dari auth.dart
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginView()),
-      (route) => false,
+  void _showNotificationDialog(String title, String body) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Tutup")),
+        ],
+      ),
     );
   }
 
-  final List<Widget> _pages = [
-    const Center(child: Text("Beranda Pembeli")),
-    const Center(child: Text("Daftar Barang")),
-    const Center(child: Text("Profil")),
-  ];
+  Future<void> _logout(BuildContext context) async {
+    await AuthService.logout();
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginView()), (route) => false);
+  }
+
+  Future<void> loadHomeData() async {
+    try {
+      final kategoriRes = await HomeService.fetchKategori();
+      final barangRes = await HomeService.fetchBarang();
+      setState(() {
+        kategori = kategoriRes;
+        barang = barangRes;
+      });
+    } catch (e) {
+      print('Error loading home data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initApp();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      _buildBeranda(),
+      const Center(child: Text("Daftar Barang")),
+      const Center(child: Text("Profil")),
+    ];
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: _selectedIndex < 2 ? _pages[_selectedIndex] : null,
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
@@ -202,10 +204,12 @@ void _showNotificationDialog(String title, String body) {
                     ? const Text("Tidak ada notifikasi saat ini.")
                     : Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: _notifications.map((notif) => ListTile(
-                          leading: const Icon(Icons.notifications),
-                          title: Text(notif),
-                        )).toList(),
+                        children: _notifications
+                            .map((notif) => ListTile(
+                                  leading: const Icon(Icons.notifications),
+                                  title: Text(notif),
+                                ))
+                            .toList(),
                       ),
                 actions: [
                   TextButton(
@@ -227,10 +231,7 @@ void _showNotificationDialog(String title, String body) {
                 title: const Text('Konfirmasi Logout'),
                 content: const Text('Anda yakin ingin logout?'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Batal'),
-                  ),
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     onPressed: () {
@@ -271,6 +272,113 @@ void _showNotificationDialog(String title, String body) {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBeranda() {
+    return RefreshIndicator(
+      onRefresh: loadHomeData,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          SizedBox(
+            height: 180,
+            child: PageView(
+              children: [
+                _carouselItem('assets/banner1.jpg'),
+                _carouselItem('assets/banner2.jpg'),
+                _carouselItem('assets/banner3.jpg'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Kategori', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          _buildKategoriList(),
+          const SizedBox(height: 20),
+          const Text('Rekomendasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          _buildBarangGrid(),
+        ],
+      ),
+    );
+  }
+
+  Widget _carouselItem(String imagePath) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.asset(imagePath, fit: BoxFit.cover),
+    );
+  }
+
+  Widget _buildKategoriList() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: kategori.length,
+        itemBuilder: (context, index) {
+          final item = kategori[index];
+          return Container(
+            width: 100,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.category, size: 30, color: Colors.green),
+                const SizedBox(height: 5),
+                Text(item['kategori'], style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBarangGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: barang.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.8,
+      ),
+      itemBuilder: (context, index) {
+        final item = barang[index];
+        final fileName = Uri.encodeComponent(item['images'][0]['directory']);
+        final imageUrl = 'http://10.0.2.2:8000/gambarBarang/$fileName';
+
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Image.network(imageUrl, height: 100, width: double.infinity, fit: BoxFit.cover),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(item['nama_barang'], style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text("Rp${item['harga_barang']}", style: const TextStyle(color: Colors.green)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

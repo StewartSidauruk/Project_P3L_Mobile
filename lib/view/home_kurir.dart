@@ -113,16 +113,7 @@ Future<void> _initApp() async {
     const Center(child: Text("Riwayat Kirim")),
     const Center(child: Text("Profil Kurir")),
   ];
-
-  Future<void> _logout(BuildContext context) async {
-    await AuthService.logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginView()),
-      (route) => false,
-    );
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

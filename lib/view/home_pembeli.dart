@@ -7,8 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:flutter_application_p3l/services/home_service.dart';
-import 'package:flutter_application_p3l/view/list_merchandise.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_application_p3l/view/profile_pembeli.dart';
 
 final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -154,7 +154,8 @@ class _HomePembeliState extends State<HomePembeli> {
     final List<Widget> _pages = [
       _buildBeranda(),
       const Center(child: Text("Daftar Barang")),
-      const Center(child: Text("Profil")),
+      const Center(child: Text("Pesanan")),
+      const ProfilePembeli(), // ✅ ganti dari Text ke widget ini
     ];
 
     return Scaffold(

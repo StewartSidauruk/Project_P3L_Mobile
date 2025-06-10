@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
+import 'package:flutter_application_p3l/view/pengiriman_kurir.dart';
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_application_p3l/view/kurir_profile.dart';
+
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -109,25 +112,17 @@ Future<void> _initApp() async {
   }
 
   final List<Widget> _pages = [
-    const Center(child: Text("Pengiriman Hari Ini")),
-    const Center(child: Text("Riwayat Kirim")),
-    const Center(child: Text("Profil Kurir")),
+    const Center(child: Text("belanja")),
+    const PengirimanKurirPage(),
+    const KurirProfilePage(),
   ];
 
-  Future<void> _logout(BuildContext context) async {
-    await AuthService.logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginView()),
-      (route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      appBar: (_selectedIndex != 0) ? null : _buildAppBar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
@@ -136,8 +131,8 @@ Future<void> _initApp() async {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Belanja'),
           BottomNavigationBarItem(icon: Icon(Icons.local_shipping), label: 'Pengiriman'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
@@ -222,7 +217,7 @@ Future<void> _initApp() async {
           Expanded(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Cari pengiriman...',
+                hintText: 'Cari barang...',
                 border: InputBorder.none,
               ),
               style: TextStyle(fontSize: 16),

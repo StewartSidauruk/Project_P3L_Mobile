@@ -28,6 +28,9 @@ class _HomePembeliState extends State<HomePembeli> {
   List<dynamic> kategori = [];
   List<dynamic> barang = [];
 
+  // Daftar halaman yang akan ditampilkan di body
+  late final List<Widget> _pages;
+
   Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
     setState(() => _notifications = data);
@@ -149,22 +152,21 @@ class _HomePembeliState extends State<HomePembeli> {
   void initState() {
     super.initState();
     _initApp();
+    // Inisialisasi _pages di initState
+    _pages = [
+      _buildBeranda(),
+      const ListMerchandise(), // Ganti dengan ListMerchandise
+      const RiwayatTransaksiPembelian(),
+      const ProfilePembeli(),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
-      _buildBeranda(),
-      const Center(child: Text("Daftar Barang")),
-      const RiwayatTransaksiPembelian(), // GANTI DI SINI
-      const ProfilePembeli(),
-    ];
-
-
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _selectedIndex == 3 ? null : _buildAppBar(), // ✅ sembunyikan AppBar saat di tab profil
-      body: _pages[_selectedIndex],
+      appBar: _selectedIndex == 3 ? null : _buildAppBar(),
+      body: _pages[_selectedIndex], // Tampilkan halaman berdasarkan _selectedIndex
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
@@ -174,17 +176,10 @@ class _HomePembeliState extends State<HomePembeli> {
           setState(() {
             _selectedIndex = index;
           });
-
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ListMerchandise()),
-            );
-          }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Merchandise',),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Merchandise'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Pesanan'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
@@ -195,7 +190,12 @@ class _HomePembeliState extends State<HomePembeli> {
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
-      title: _buildSearchBar(),
+      title: _selectedIndex == 1 // Jika indeks adalah 1 (Merchandise)
+          ? const Text(
+              'Merchandise',
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            )
+          : _buildSearchBar(), // Jika bukan, tampilkan search bar
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
@@ -314,7 +314,7 @@ class _HomePembeliState extends State<HomePembeli> {
       borderRadius: BorderRadius.circular(12),
       child: Image.asset(
         imagePath,
-        fit: BoxFit.cover,  // fills the space without distortion
+        fit: BoxFit.cover, // fills the space without distortion
         width: double.infinity,
       ),
     );
@@ -338,7 +338,7 @@ class _HomePembeliState extends State<HomePembeli> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Colors.green.shade700, // ✅ border color
-                width: 1.5,                    // ✅ border thickness
+                width: 1.5, // ✅ border thickness
               ),
               boxShadow: [
                 BoxShadow(

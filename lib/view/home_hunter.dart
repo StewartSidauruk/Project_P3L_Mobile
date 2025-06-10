@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
-import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_application_p3l/view/profile_hunter.dart';
+import 'package:flutter_application_p3l/view/komisi_hunter.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 class HomeHunter extends StatefulWidget {
   const HomeHunter({super.key});
@@ -19,9 +20,9 @@ class HomeHunter extends StatefulWidget {
 
 class _HomeHunterState extends State<HomeHunter> {
   int _selectedIndex = 0;
-    List<String> _notifications = [];
+  List<String> _notifications = [];
 
-    Future<void> _refreshNotifications() async {
+  Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
     setState(() {
       _notifications = data;
@@ -50,7 +51,8 @@ class _HomeHunterState extends State<HomeHunter> {
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
     await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
@@ -61,47 +63,44 @@ class _HomeHunterState extends State<HomeHunter> {
   }
 
   Future<void> _initApp() async {
-  // Tidak perlu permission di API 27
-  await initLocalNotifications();
+    await initLocalNotifications();
 
-  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('🔥 FCM diterima: ${message.toMap()}');
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('🔥 FCM diterima: ${message.toMap()}');
 
-    String? title = message.notification?.title ?? message.data['title'];
-    String? body = message.notification?.body ?? message.data['body'];
+      String? title = message.notification?.title ?? message.data['title'];
+      String? body = message.notification?.body ?? message.data['body'];
 
-    if (title != null && body != null) {
-      print('📣 Memunculkan notifikasi tray');
+      if (title != null && body != null) {
+        print('📣 Memunculkan notifikasi tray');
 
-      flutterLocalNotificationsPlugin.show(
-        message.hashCode,
-        title,
-        body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'high_importance_channel',
-            'Notifikasi Penting',
-            channelDescription: 'Channel untuk notifikasi penting',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+        flutterLocalNotificationsPlugin.show(
+          message.hashCode,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'high_importance_channel',
+              'Notifikasi Penting',
+              channelDescription: 'Channel untuk notifikasi penting',
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+            ),
           ),
-        ),
-      );
-    }
-  });
-}
-
-
+        );
+      }
+    });
+  }
 
   Future<void> _logout(BuildContext context) async {
-    await AuthService.logout(); // ✅ panggil method dari auth.dart
+    await AuthService.logout(); 
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginView()),
@@ -111,7 +110,7 @@ class _HomeHunterState extends State<HomeHunter> {
 
   final List<Widget> _pages = [
     const Center(child: Text("Barang Titipan")),
-    const Center(child: Text("Ambil & Donasi")),
+    KomisiHunter(), // ✅ Ganti dari Text ke KomisiHunter
     const Center(child: Text("Profil Hunter")),
   ];
 
@@ -120,25 +119,23 @@ class _HomeHunterState extends State<HomeHunter> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: _pages[_selectedIndex],
+      body: _selectedIndex == 2
+          ? const ProfileHunter()
+          : _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
         onTap: (index) {
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileHunter()),
-            );
-          } else {
-            setState(() => _selectedIndex = index);
-          }
+          setState(() {
+            _selectedIndex = index;
+          });
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.inbox), label: 'Titipan'),
-          BottomNavigationBarItem(icon: Icon(Icons.volunteer_activism), label: 'Donasi'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.attach_money), label: 'Komisi'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
@@ -148,7 +145,9 @@ class _HomeHunterState extends State<HomeHunter> {
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
-      title: _buildSearchBar(),
+      title: _selectedIndex == 2
+          ? const Text("Profile", style: TextStyle(color: Colors.white))
+          : _buildSearchBar(),
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
@@ -162,10 +161,12 @@ class _HomeHunterState extends State<HomeHunter> {
                     ? const Text("Tidak ada notifikasi saat ini.")
                     : Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: _notifications.map((notif) => ListTile(
-                          leading: const Icon(Icons.notifications),
-                          title: Text(notif),
-                        )).toList(),
+                        children: _notifications
+                            .map((notif) => ListTile(
+                                  leading: const Icon(Icons.notifications),
+                                  title: Text(notif),
+                                ))
+                            .toList(),
                       ),
                 actions: [
                   TextButton(
@@ -192,7 +193,8 @@ class _HomeHunterState extends State<HomeHunter> {
                     child: const Text('Batal'),
                   ),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     onPressed: () {
                       Navigator.pop(ctx);
                       _logout(context);

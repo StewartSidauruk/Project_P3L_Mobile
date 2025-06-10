@@ -6,6 +6,7 @@ import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_application_p3l/view/profile_hunter.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -54,12 +55,12 @@ class _HomeHunterState extends State<HomeHunter> {
   }
 
   @override
-void initState() {
-  super.initState();
-  _initApp(); // panggil setup
-}
+  void initState() {
+    super.initState();
+    _initApp(); // panggil setup
+  }
 
-Future<void> _initApp() async {
+  Future<void> _initApp() async {
   // Tidak perlu permission di API 27
   await initLocalNotifications();
 
@@ -114,7 +115,6 @@ Future<void> _initApp() async {
     const Center(child: Text("Profil Hunter")),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,7 +126,16 @@ Future<void> _initApp() async {
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileHunter()),
+            );
+          } else {
+            setState(() => _selectedIndex = index);
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.inbox), label: 'Titipan'),
           BottomNavigationBarItem(icon: Icon(Icons.volunteer_activism), label: 'Donasi'),

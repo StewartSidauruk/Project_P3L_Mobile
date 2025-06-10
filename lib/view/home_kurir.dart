@@ -117,7 +117,6 @@ Future<void> _initApp() async {
     const KurirProfilePage(),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

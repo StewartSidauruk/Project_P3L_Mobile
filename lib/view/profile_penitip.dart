@@ -76,61 +76,66 @@ class _ProfilePenitipState extends State<ProfilePenitip> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              const Text("Poin Reward 🪙", style: TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 8),
-                              Text(
-                                "${user!['poin_penitip'] ?? 0}",
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "Unduh aplikasi untuk menukarkan poin dengan merchandise menarik!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12),
-                              )
-                            ],
+                // --- PERUBAHAN DIMULAI DI SINI ---
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                const Text("Poin Reward 🪙", style: TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "${user!['poin_penitip'] ?? 0}",
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+                                ),
+                                const Spacer(), // Menambahkan Spacer untuk mendorong teks ke bawah
+                                const Text(
+                                  "Unduh aplikasi untuk menukarkan poin dengan merchandise menarik!",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              const Text("Saldo 💸", style: TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 8),
-                              Text(
-                                currency.format(user!['saldo'] ?? 0),
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "Ayo tingkatkan lagi penjualannya!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12),
-                              )
-                            ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                const Text("Saldo 💸", style: TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                Text(
+                                  currency.format(user!['saldo'] ?? 0),
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                                ),
+                                const Spacer(), // Menambahkan Spacer untuk mendorong teks ke bawah
+                                const Text(
+                                  "Ayo tingkatkan lagi penjualannya!",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
+                // --- PERUBAHAN SELESAI DI SINI ---
               ],
             ),
     );

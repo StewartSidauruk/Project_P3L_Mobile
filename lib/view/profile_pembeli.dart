@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+// ✅ 1. Impor file yang dibutuhkan untuk logout
+import 'package:flutter_application_p3l/auth/auth.dart';
+import 'package:flutter_application_p3l/view/login.dart';
 
 class ProfilePembeli extends StatefulWidget {
   const ProfilePembeli({super.key});
@@ -37,16 +40,41 @@ class _ProfilePembeliState extends State<ProfilePembeli> {
     }
   }
 
-  Future<void> _logout() async {
-    final token = await storage.read(key: 'token');
-    await http.post(
-      Uri.parse('http://10.0.2.2:8000/api/pembeli/logout-mobile'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    await storage.deleteAll();
-    if (context.mounted) {
-      Navigator.popUntil(context, (route) => route.isFirst);
+  // ✅ 2. Menggunakan fungsi _logout yang standar dari AuthService
+  Future<void> _logout(BuildContext context) async {
+    await AuthService.logout();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginView()),
+        (route) => false,
+      );
     }
+  }
+  
+  // ✅ Fungsi untuk menampilkan dialog konfirmasi
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Konfirmasi Logout"),
+        content: const Text("Apakah Anda yakin ingin logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx); // Tutup dialog
+              _logout(context); // Panggil fungsi logout
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -62,37 +90,7 @@ class _ProfilePembeliState extends State<ProfilePembeli> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF005E34),
         title: const Text("Profil", style: TextStyle(color: Colors.white)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-            color: Colors.white,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text("Konfirmasi Logout"),
-                  content: const Text("Apakah Anda yakin ingin logout?"),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _logout();
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text("Logout"),
-                    ),
-                  ],
-                ),
-              );
-            },
-            color: Colors.white,
-          ),
-        ],
+        automaticallyImplyLeading: false, // Menghilangkan tombol back
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -130,13 +128,13 @@ class _ProfilePembeliState extends State<ProfilePembeli> {
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: user?['alamat'] == null || (user?['alamat'] as List).isEmpty
-                ? [const Text("Belum ada alamat.")]
-                : (user?['alamat'] as List).map<Widget>((alamat) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Text(alamat['alamat'] ?? '-'), // GANTI INI
-                    );
-                  }).toList(),
+                  ? [const Text("Belum ada alamat.")]
+                  : (user?['alamat'] as List).map<Widget>((alamat) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(alamat['alamat'] ?? '-'),
+                      );
+                    }).toList(),
             ),
           ),
           const SizedBox(height: 10),
@@ -149,6 +147,19 @@ class _ProfilePembeliState extends State<ProfilePembeli> {
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ✅ 3. Menambahkan Tombol Logout di body
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: _showLogoutDialog, // Panggil fungsi dialog yang sama
+            tileColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade300)
             ),
           ),
         ],

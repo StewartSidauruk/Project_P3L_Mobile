@@ -7,6 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 
+// Import yang diperlukan untuk memperbaiki error locale
+import 'package:intl/date_symbol_data_local.dart';
+
 import 'view/login.dart';
 import 'view/home_pembeli.dart';
 import 'view/home_penitip.dart';
@@ -14,9 +17,10 @@ import 'view/home_hunter.dart';
 import 'view/home_kurir.dart';
 
 final storage = FlutterSecureStorage();
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
-/// ✅ Handler notifikasi background
+/// Handler notifikasi background
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print('📥 [BG] Notifikasi masuk: ${message.toMap()}');
@@ -24,12 +28,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   String? title = message.notification?.title ?? message.data['title'];
   String? body = message.notification?.body ?? message.data['body'];
 
-  print('💡 [BG Handler] Title: $title, Body: $body'); // <-- Tambahkan ini
+  print('💡 [BG Handler] Title: $title, Body: $body');
 
   if (title != null && body != null) {
-    print('📣 [BG Handler] Memanggil flutterLocalNotificationsPlugin.show'); // <-- Tambahkan ini
+    print('📣 [BG Handler] Memanggil flutterLocalNotificationsPlugin.show');
     try {
-       flutterLocalNotificationsPlugin.show(
+      flutterLocalNotificationsPlugin.show(
         message.hashCode,
         title,
         body,
@@ -44,18 +48,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           ),
         ),
       );
-      print('✅ [BG Handler] flutterLocalNotificationsPlugin.show BERHASIL dipanggil'); // <-- Tambahkan ini
+      print(
+          '✅ [BG Handler] flutterLocalNotificationsPlugin.show BERHASIL dipanggil');
     } catch (e) {
-       print('❌ [BG Handler] Error saat memanggil show: $e'); // <-- Tambahkan ini
+      print('❌ [BG Handler] Error saat memanggil show: $e');
     }
   } else {
-     print('⚠️ [BG Handler] Title atau Body kosong, tidak menampilkan notifikasi lokal.'); // <-- Tambahkan ini
+    print(
+        '⚠️ [BG Handler] Title atau Body kosong, tidak menampilkan notifikasi lokal.');
   }
 }
 
-
-
-/// ✅ Setup notifikasi channel Android
+/// Setup notifikasi channel Android
 Future<void> setupFlutterNotifications() async {
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'high_importance_channel',
@@ -73,7 +77,8 @@ Future<void> setupFlutterNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 }
 
@@ -99,8 +104,7 @@ Future<void> simpanTokenFcmKeBackend() async {
   }
 }
 
-
-/// ✅ Minta izin notifikasi (Android 13+)
+/// Minta izin notifikasi (Android 13+)
 Future<void> requestNotificationPermission() async {
   final status = await Permission.notification.status;
   if (!status.isGranted) {
@@ -110,14 +114,18 @@ Future<void> requestNotificationPermission() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi data locale untuk format 'id_ID'
+  await initializeDateFormatting('id_ID', null);
+
   await Firebase.initializeApp();
 
-  await requestNotificationPermission(); // ⬅️ Tambahkan ini
+  await requestNotificationPermission();
   await setupFlutterNotifications();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // ⬇️ Kirim token FCM ke Laravel
+  // Kirim token FCM ke Laravel
   final fcmToken = await FirebaseMessaging.instance.getToken();
   final token = await storage.read(key: 'token');
   if (fcmToken != null && token != null) {

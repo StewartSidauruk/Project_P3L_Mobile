@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter_application_p3l/auth/auth.dart';
-import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'login.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -16,10 +19,13 @@ class ProfileHunter extends StatefulWidget {
 }
 
 class _ProfileHunter extends State<ProfileHunter> {
+  final storage = FlutterSecureStorage();
+  Map<String, dynamic>? user;
   int _selectedIndex = 0;
   List<String> _notifications = [];
 
-  Future<void> _refreshNotifications() async {
+
+    Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
     setState(() {
       _notifications = data;
@@ -57,6 +63,23 @@ class _ProfileHunter extends State<ProfileHunter> {
     super.initState();
     _initApp();
   }
+
+  // Future<void> fetchProfile() async {
+  //   final token = await storage.read(key: 'token');
+  //   final response = await http.get(
+  //     Uri.parse('http://10.0.2.2:8000/api/me'),
+  //     headers: {'Authorization': 'Bearer $token'},
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     final data = json.decode(response.body);
+  //     if (data['role'] == 'Pembeli') {
+  //       setState(() => user = data['user']);
+  //     }
+  //   } else {
+  //     print("Gagal mengambil data pembeli: ${response.body}");
+  //   }
+  // }
 
   Future<void> _initApp() async {
     await initLocalNotifications();

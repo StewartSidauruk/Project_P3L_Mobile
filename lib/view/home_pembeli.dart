@@ -9,6 +9,8 @@ import 'package:flutter_application_p3l/auth/auth.dart';
 import 'package:flutter_application_p3l/services/home_service.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_p3l/view/profile_pembeli.dart';
+import 'package:flutter_application_p3l/view/list_merchandise.dart';
+import 'package:flutter_application_p3l/view/history_pembeli.dart';
 
 final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -154,37 +156,30 @@ class _HomePembeliState extends State<HomePembeli> {
     final List<Widget> _pages = [
       _buildBeranda(),
       const Center(child: Text("Daftar Barang")),
-      const Center(child: Text("Pesanan")),
-      const ProfilePembeli(), // ✅ ganti dari Text ke widget ini
+      const RiwayatTransaksiPembelian(), // GANTI DI SINI
+      const ProfilePembeli(),
     ];
+
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      appBar: _selectedIndex == 3 ? null : _buildAppBar(), // ✅ sembunyikan AppBar saat di tab profil
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
-        onTap: (index) async {
-          if (index == 3) {
-            final storage = FlutterSecureStorage();
-            await storage.deleteAll();
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginView()),
-                (route) => false,
-              );
-            }
-          }else if (index == 1) {
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+
+          if (index == 1) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ListMerchandise()),
             );
-          }else {
-            setState(() => _selectedIndex = index);
           }
         },
         items: const [

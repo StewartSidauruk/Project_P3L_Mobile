@@ -167,6 +167,7 @@ class _HomePembeliState extends State<HomePembeli> {
     _pages = [
       _buildBeranda(),
       const ListMerchandise(), // Ganti dengan ListMerchandise
+    ];
   }
   
   @override
@@ -175,24 +176,22 @@ class _HomePembeliState extends State<HomePembeli> {
     super.dispose();
   }
 
-  @override
+
+ @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    // Inisialisasi _pages di dalam build() agar _buildBeranda() bisa diakses
+    final List<Widget> pages = [
       _buildBeranda(),
-      const Center(child: Text("Daftar Barang")), // Placeholder, karena navigasi ke halaman lain
+      const ListMerchandise(), // Perhatikan, ini adalah Widget, bukan navigasi
       const RiwayatTransaksiPembelian(),
       const ProfilePembeli(),
     ];
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: (_selectedIndex == 2 || _selectedIndex == 3) ? null : _buildAppBar(),
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex], // Gunakan 'pages' bukan '_pages'
       bottomNavigationBar: BottomNavigationBar(
-        // ... (Bottom Nav Bar tidak berubah)
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
@@ -200,6 +199,10 @@ class _HomePembeliState extends State<HomePembeli> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
+            // Handle navigasi untuk Merchandise di sini jika diperlukan
+            // if (index == 1) { // Jika Merchandise adalah index 1
+            //   Navigator.push(context, MaterialPageRoute(builder: (_) => const ListMerchandise()));
+            // }
           });
         },
         items: const [

@@ -38,7 +38,8 @@ class _HomePembeliState extends State<HomePembeli> {
   int? _selectedKategoriId; // ID kategori yang dipilih
   SortOption _currentSortOption = SortOption.none; // Opsi sortir saat ini
 
-  // ... (Fungsi notifikasi tidak berubah)
+  late final List<Widget> _pages;
+
   Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
     setState(() => _notifications = data);
@@ -162,6 +163,10 @@ class _HomePembeliState extends State<HomePembeli> {
   void initState() {
     super.initState();
     _initApp();
+    // Inisialisasi _pages di initState
+    _pages = [
+      _buildBeranda(),
+      const ListMerchandise(), // Ganti dengan ListMerchandise
   }
   
   @override
@@ -178,7 +183,10 @@ class _HomePembeliState extends State<HomePembeli> {
       const RiwayatTransaksiPembelian(),
       const ProfilePembeli(),
     ];
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: (_selectedIndex == 2 || _selectedIndex == 3) ? null : _buildAppBar(),
@@ -193,17 +201,10 @@ class _HomePembeliState extends State<HomePembeli> {
           setState(() {
             _selectedIndex = index;
           });
-
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ListMerchandise()),
-            );
-          }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Merchandise',),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Merchandise'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Pesanan'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
@@ -214,7 +215,12 @@ class _HomePembeliState extends State<HomePembeli> {
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
-      title: _buildSearchBar(),
+      title: _selectedIndex == 1 // Jika indeks adalah 1 (Merchandise)
+          ? const Text(
+              'Merchandise',
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            )
+          : _buildSearchBar(), // Jika bukan, tampilkan search bar
       actions: [
         // ... (Tombol notifikasi dan top seller tidak berubah)
         IconButton(
@@ -349,7 +355,11 @@ class _HomePembeliState extends State<HomePembeli> {
     // ... (Tidak berubah)
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.asset(imagePath, fit: BoxFit.cover, width: double.infinity),
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.cover, // fills the space without distortion
+        width: double.infinity,
+      ),
     );
   }
 

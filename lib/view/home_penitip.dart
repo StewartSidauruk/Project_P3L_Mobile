@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 import 'login.dart';
 import 'package:flutter_application_p3l/services/notifikasi_service.dart';
 import 'package:flutter_application_p3l/auth/auth.dart';
+// ✅ Pastikan nama file ini sesuai dengan yang Anda buat sebelumnya
+import 'package:flutter_application_p3l/view/history_titipan.dart'; 
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 List<dynamic> kategori = [];
@@ -25,6 +27,54 @@ class HomePenitip extends StatefulWidget {
 class _HomePenitipState extends State<HomePenitip> {
   int _selectedIndex = 0;
   List<String> _notifications = [];
+
+  // Daftar judul untuk AppBar
+  static const List<String> _appBarTitles = ['AtmaKitchen', 'Riwayat Penitipan', 'Profil Saya'];
+
+  @override
+  void initState() {
+    super.initState();
+    _initApp();
+    loadHomeData();
+  }
+
+  Future<void> _initApp() async {
+    // Tidak perlu permission di API 27
+    await initLocalNotifications();
+
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('🔥 FCM diterima: ${message.toMap()}');
+
+      String? title = message.notification?.title ?? message.data['title'];
+      String? body = message.notification?.body ?? message.data['body'];
+
+      if (title != null && body != null) {
+        print('📣 Memunculkan notifikasi tray');
+
+        flutterLocalNotificationsPlugin.show(
+          message.hashCode,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'high_importance_channel',
+              'Notifikasi Penting',
+              channelDescription: 'Channel untuk notifikasi penting',
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
+    });
+  }
 
   Future<void> _refreshNotifications() async {
     final data = await NotifikasiService.fetchNotifikasi();
@@ -60,10 +110,10 @@ class _HomePenitipState extends State<HomePenitip> {
       importance: Importance.high,
     );
 
-    final AndroidInitializationSettings initializationSettingsAndroid =
+    const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final InitializationSettings initializationSettings =
+    const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
@@ -72,55 +122,8 @@ class _HomePenitipState extends State<HomePenitip> {
         ?.createNotificationChannel(channel);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _initApp();
-    loadHomeData(); // tambahkan ini
-  }
-
-Future<void> _initApp() async {
-  // Tidak perlu permission di API 27
-  await initLocalNotifications();
-
-  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('🔥 FCM diterima: ${message.toMap()}');
-
-    String? title = message.notification?.title ?? message.data['title'];
-    String? body = message.notification?.body ?? message.data['body'];
-
-    if (title != null && body != null) {
-      print('📣 Memunculkan notifikasi tray');
-
-      flutterLocalNotificationsPlugin.show(
-        message.hashCode,
-        title,
-        body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'high_importance_channel',
-            'Notifikasi Penting',
-            channelDescription: 'Channel untuk notifikasi penting',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-        ),
-      );
-    }
-  });
-}
-
-
-
   Future<void> _logout(BuildContext context) async {
-    await AuthService.logout(); // ✅ panggil method dari auth.dart
+    await AuthService.logout();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginView()),
@@ -130,18 +133,20 @@ Future<void> _initApp() async {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Daftar halaman/view untuk BottomNavigationBar
     final List<Widget> _pages = [
-      _buildBeranda(), // 🟢 Tampilkan info umum seperti pembeli
-      const Center(child: Text("Daftar Barang")),
+      _buildBeranda(),
+      const RiwayatPenitipanView(), // Halaman riwayat penitipan
       const ProfilePenitip(),
     ];
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      appBar: _buildAppBar(),
+      backgroundColor: Colors.white,
+      // ✅ AppBar dibuat dinamis berdasarkan halaman yang dipilih
+      appBar: _buildAppBar(), 
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
@@ -155,10 +160,18 @@ Future<void> _initApp() async {
     );
   }
 
+  // ✅ AppBar dinamis yang berubah sesuai tab
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
-      title: _buildSearchBar(),
+      // Jika di halaman Home (index 0), tampilkan search bar.
+      // Jika tidak, tampilkan judul biasa.
+      title: _selectedIndex == 0
+          ? _buildSearchBar()
+          : Text(
+              _appBarTitles[_selectedIndex],
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
@@ -172,10 +185,12 @@ Future<void> _initApp() async {
                     ? const Text("Tidak ada notifikasi saat ini.")
                     : Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: _notifications.map((notif) => ListTile(
-                          leading: const Icon(Icons.notifications),
-                          title: Text(notif),
-                        )).toList(),
+                        children: _notifications
+                            .map((notif) => ListTile(
+                                  leading: const Icon(Icons.notifications),
+                                  title: Text(notif),
+                                ))
+                            .toList(),
                       ),
                 actions: [
                   TextButton(
@@ -219,89 +234,90 @@ Future<void> _initApp() async {
   }
 
   Widget _buildBeranda() {
-  return RefreshIndicator(
-    onRefresh: loadHomeData,
-    child: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        AspectRatio(
-          aspectRatio: 3 / 1,
-          child: PageView(
-            children: [
-              _carouselItem('images/banner1.jpg'),
-              _carouselItem('images/banner2.jpg'),
-              _carouselItem('images/banner3.jpg'),
-            ],
+    return RefreshIndicator(
+      onRefresh: loadHomeData,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          AspectRatio(
+            aspectRatio: 3 / 1,
+            child: PageView(
+              children: [
+                _carouselItem('images/banner1.jpg'),
+                _carouselItem('images/banner2.jpg'),
+                _carouselItem('images/banner3.jpg'),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        const Text('Kategori', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        _buildKategoriList(),
-        const SizedBox(height: 20),
-        const Text('Rekomendasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        _buildBarangGrid(),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 20),
+          const Text('Kategori', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          _buildKategoriList(),
+          const SizedBox(height: 20),
+          const Text('Rekomendasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          _buildBarangGrid(),
+        ],
+      ),
+    );
+  }
 
-Widget _carouselItem(String imagePath) {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(12),
-    child: Image.asset(
-      imagePath,
-      fit: BoxFit.cover,
-      width: double.infinity,
-    ),
-  );
-}
+  Widget _carouselItem(String imagePath) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        width: double.infinity,
+      ),
+    );
+  }
 
-Widget _buildKategoriList() {
-  return SizedBox(
-    height: 100,
-    child: ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: kategori.length,
-      itemBuilder: (context, index) {
-        final item = kategori[index];
-        final imageUrl = 'http://10.0.2.2:8000/images/${Uri.encodeComponent(item['gambar'])}';
+  Widget _buildKategoriList() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: kategori.length,
+        itemBuilder: (context, index) {
+          final item = kategori[index];
+          final imageUrl = 'http://10.0.2.2:8000/images/${Uri.encodeComponent(item['gambar'])}';
 
-        return Container(
-          width: 100,
-          margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE1DDD2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green.shade700, width: 1.5),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
-            ],
-          ),
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, color: Colors.grey),
+          return Container(
+            width: 100,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE1DDD2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade700, width: 1.5),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+              ],
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 5),
-              Text(item['kategori'], style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+                const SizedBox(height: 5),
+                Text(item['kategori'], style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildBarangGrid() {
     final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
@@ -311,7 +327,10 @@ Widget _buildKategoriList() {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: barang.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.8,
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.8,
       ),
       itemBuilder: (context, index) {
         final item = barang[index];
@@ -349,7 +368,6 @@ Widget _buildKategoriList() {
     );
   }
 
-
   Widget _buildSearchBar() {
     return Container(
       height: 40,
@@ -358,8 +376,8 @@ Widget _buildKategoriList() {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           Icon(Icons.search, color: Colors.grey),
           SizedBox(width: 8),
           Expanded(

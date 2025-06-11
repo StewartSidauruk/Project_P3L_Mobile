@@ -59,13 +59,13 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
             final all = snapshot.data!;
             final disiapkan = all.where((t) => t.status == 'disiapkan').toList();
             final dikirim = all.where((t) => t.status == 'dikirim').toList();
-            final selesai = all.where((t) => t.status == 'selesai').toList();
+            final selesai = all.where((t) => t.status == 'Selesai').toList();
 
             return TabBarView(
               controller: _tabController,
               children: [
                 _buildList(disiapkan, "Kirim", Colors.amber),
-                _buildList(dikirim, "selesai", Colors.green),
+                _buildList(dikirim, "Selesai", Colors.green),
                 _buildList(selesai, null, null),
               ],
             );
@@ -152,7 +152,7 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
                       onPressed: () async {
-                        final statusBaru = transaksi.status == 'disiapkan' ? 'dikirim' : 'selesai';
+                        final statusBaru = transaksi.status == 'disiapkan' ? 'dikirim' : 'Selesai';
 
                         try {
                           await PengirimanService.updateStatus(transaksi.id, statusBaru);
@@ -189,7 +189,7 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
         return Colors.red;
       case "dikirim":
         return Colors.amber;
-      case "selesai":
+      case "Selesai":
         return Colors.green;
       default:
         return Colors.grey;

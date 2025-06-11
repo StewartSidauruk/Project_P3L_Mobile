@@ -15,6 +15,7 @@ import 'view/home_pembeli.dart';
 import 'view/home_penitip.dart';
 import 'view/home_hunter.dart';
 import 'view/home_kurir.dart';
+import 'view/umum_view.dart';
 
 final storage = FlutterSecureStorage();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -171,7 +172,8 @@ class MainApp extends StatelessWidget {
       }
     }
 
-    return const LoginView();
+    // MODIFIKASI: Ganti LoginView() menjadi UmumView()
+    return const UmumView();
   }
 
   @override

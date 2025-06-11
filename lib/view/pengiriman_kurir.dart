@@ -30,7 +30,7 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cari kiriman anda"),
+        title: const Text("Cari kiriman anda", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF005E34),
         actions: const [
           Icon(Icons.notifications_none),
@@ -65,7 +65,7 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
               controller: _tabController,
               children: [
                 _buildList(disiapkan, "Kirim", Colors.amber),
-                _buildList(dikirim, "Selesai", Colors.green),
+                _buildList(dikirim, "selesai", Colors.green),
                 _buildList(selesai, null, null),
               ],
             );
@@ -108,15 +108,23 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text("25.04.18"),
+                    Text("Nomor: ${transaksi.nota}"),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset("images/profilKurir.png", width: 70, height: 70),
-                    const SizedBox(width: 12),
+                    SizedBox( 
+                      width: 70, 
+                      height: 70, 
+                      child: Image.network(
+                        barang.gambar ?? 'https://via.placeholder.com/70',
+                        fit: BoxFit.cover, 
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, color: Colors.grey, size: 70), // Ukuran ikon error
+                      ),
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,8 +137,8 @@ class _PengirimanKurirPageState extends State<PengirimanKurirPage> with SingleTi
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      "Total Belanja\nRp 115.000",
+                    Text(
+                      ("Rp ${barang.harga}"),
                       textAlign: TextAlign.right,
                       style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                     ),

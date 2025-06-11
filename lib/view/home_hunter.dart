@@ -100,7 +100,7 @@ class _HomeHunterState extends State<HomeHunter> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await AuthService.logout(); 
+    await AuthService.logout();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginView()),
@@ -109,9 +109,9 @@ class _HomeHunterState extends State<HomeHunter> {
   }
 
   final List<Widget> _pages = [
-    const Center(child: Text("Barang Titipan")),
-    KomisiHunter(), // ✅ Ganti dari Text ke KomisiHunter
-    const Center(child: Text("Profil Hunter")),
+    const Center(child: Text("Home Hunter", style: TextStyle(fontSize: 24))),
+    KomisiHunter(),
+    const ProfileHunter(),
   ];
 
   @override
@@ -119,9 +119,7 @@ class _HomeHunterState extends State<HomeHunter> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: _selectedIndex == 2
-          ? const ProfileHunter()
-          : _pages[_selectedIndex],
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
@@ -133,9 +131,8 @@ class _HomeHunterState extends State<HomeHunter> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.inbox), label: 'Titipan'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.attach_money), label: 'Komisi'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: 'Komisi'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
@@ -143,11 +140,19 @@ class _HomeHunterState extends State<HomeHunter> {
   }
 
   AppBar _buildAppBar() {
+    String titleText;
+
+    if (_selectedIndex == 0) {
+      titleText = "Home Hunter";
+    } else if (_selectedIndex == 1) {
+      titleText = "Komisi";
+    } else {
+      titleText = "Profil";
+    }
+
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
-      title: _selectedIndex == 2
-          ? const Text("Profile", style: TextStyle(color: Colors.white))
-          : _buildSearchBar(),
+      title: Text(titleText, style: const TextStyle(color: Colors.white)),
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
@@ -193,8 +198,7 @@ class _HomeHunterState extends State<HomeHunter> {
                     child: const Text('Batal'),
                   ),
                   ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     onPressed: () {
                       Navigator.pop(ctx);
                       _logout(context);
@@ -207,32 +211,6 @@ class _HomeHunterState extends State<HomeHunter> {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: const [
-          Icon(Icons.search, color: Colors.grey),
-          SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Cari barang...',
-                border: InputBorder.none,
-              ),
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

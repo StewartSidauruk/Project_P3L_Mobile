@@ -12,6 +12,7 @@ import 'package:flutter_application_p3l/view/profile_pembeli.dart';
 import 'package:flutter_application_p3l/view/list_merchandise.dart';
 import 'package:flutter_application_p3l/view/history_pembeli.dart';
 import 'package:flutter_application_p3l/view/top_seller_view.dart';
+import 'package:flutter_application_p3l/view/detail_barang_view.dart';
 
 final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -167,6 +168,7 @@ class _HomePembeliState extends State<HomePembeli> {
     _pages = [
       _buildBeranda(),
       const ListMerchandise(), // Ganti dengan ListMerchandise
+    ];
   }
   
   @override
@@ -175,24 +177,22 @@ class _HomePembeliState extends State<HomePembeli> {
     super.dispose();
   }
 
-  @override
+
+ @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    // Inisialisasi _pages di dalam build() agar _buildBeranda() bisa diakses
+    final List<Widget> pages = [
       _buildBeranda(),
-      const Center(child: Text("Daftar Barang")), // Placeholder, karena navigasi ke halaman lain
+      const ListMerchandise(), // Perhatikan, ini adalah Widget, bukan navigasi
       const RiwayatTransaksiPembelian(),
       const ProfilePembeli(),
     ];
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: (_selectedIndex == 2 || _selectedIndex == 3) ? null : _buildAppBar(),
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex], // Gunakan 'pages' bukan '_pages'
       bottomNavigationBar: BottomNavigationBar(
-        // ... (Bottom Nav Bar tidak berubah)
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF005E34),
         unselectedItemColor: Colors.grey[600],
@@ -200,6 +200,10 @@ class _HomePembeliState extends State<HomePembeli> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
+            // Handle navigasi untuk Merchandise di sini jika diperlukan
+            // if (index == 1) { // Jika Merchandise adalah index 1
+            //   Navigator.push(context, MaterialPageRoute(builder: (_) => const ListMerchandise()));
+            // }
           });
         },
         items: const [
@@ -440,7 +444,6 @@ class _HomePembeliState extends State<HomePembeli> {
 
   // ✅ GRID BARANG YANG MENAMPILKAN DATA HASIL FILTER
   Widget _buildBarangGrid() {
-    // Tampilkan pesan jika tidak ada barang yang cocok
     if (_filteredBarang.isEmpty) {
       return const Center(
         child: Padding(
@@ -457,45 +460,86 @@ class _HomePembeliState extends State<HomePembeli> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _filteredBarang.length, // Gunakan list yang sudah difilter
+      itemCount: _filteredBarang.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.8,
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.7, // Sesuaikan rasio aspek agar lebih pas
       ),
       itemBuilder: (context, index) {
-        final item = _filteredBarang[index]; // Gunakan list yang sudah difilter
-        final fileName = Uri.encodeComponent(item['images'][0]['directory']);
-        final imageUrl = 'http://10.0.2.2:8000/gambarBarang/$fileName';
+        final item = _filteredBarang[index];
+        // Logika untuk mendapatkan URL gambar, dengan fallback jika tidak ada
+        final imageUrl = (item['images'] != null && (item['images'] as List).isNotEmpty)
+            ? 'http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(item['images'][0]['directory'])}'
+            : 'https://via.placeholder.com/160?text=No+Image';
 
-        return Container(
-          // ... (Tampilan card barang tidak berubah)
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(imageUrl, height: 160, width: double.infinity, fit: BoxFit.cover),
+        // ✅ BUNGKUS DENGAN GESTUREDETECTOR
+        return GestureDetector(
+          onTap: () {
+            // Navigasi ke halaman detail saat item ditekan
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailBarangView(barang: item),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(item['nama_barang'], style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  formatter.format(item['harga_barang']),
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Menggunakan Expanded agar gambar memenuhi ruang yang tersedia
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['nama_barang'],
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        maxLines: 2, // Batasi nama barang jadi 2 baris
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        formatter.format(item['harga_barang']),
+                        style: const TextStyle(
+                          color: Color(0xFF005E34),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

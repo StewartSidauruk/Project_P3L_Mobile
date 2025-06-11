@@ -88,13 +88,29 @@ class _LoginViewState extends State<LoginView> {
                           final role = response['role'];
 
                           if (role == 'pembeli') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePembeli()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomePembeli()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'penitip') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePenitip()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomePenitip()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'hunter') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeHunter()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeHunter()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'kurir') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeKurir()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeKurir()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Role tidak dikenal")),

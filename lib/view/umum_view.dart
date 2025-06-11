@@ -1,32 +1,22 @@
-// lib/view/home_penitip.dart
+// lib/view/umum_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_p3l/services/home_service.dart';
-import 'package:flutter_application_p3l/services/notifikasi_service.dart'; // DIKEMBALIKAN: Import NotifikasiService
 import 'package:flutter_application_p3l/view/detail_barang_view.dart';
-import 'package:flutter_application_p3l/view/history_titipan.dart';
 import 'package:flutter_application_p3l/view/login.dart';
-import 'package:flutter_application_p3l/view/profile_penitip.dart';
-import 'package:flutter_application_p3l/view/top_seller_view.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_application_p3l/auth/auth.dart';
 
 final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ', decimalDigits: 0);
 enum SortOption { none, priceAsc, priceDesc }
 
-class HomePenitip extends StatefulWidget {
-  const HomePenitip({super.key});
+class UmumView extends StatefulWidget {
+  const UmumView({super.key});
 
   @override
-  State<HomePenitip> createState() => _HomePenitipState();
+  State<UmumView> createState() => _UmumViewState();
 }
 
-class _HomePenitipState extends State<HomePenitip> {
-  int _selectedIndex = 0;
-
-  // DIKEMBALIKAN: State untuk menampung notifikasi
-  List<String> _notifications = [];
-
+class _UmumViewState extends State<UmumView> {
   List<dynamic> kategori = [];
   List<dynamic> _allBarang = [];
   List<dynamic> _filteredBarang = [];
@@ -38,31 +28,25 @@ class _HomePenitipState extends State<HomePenitip> {
   @override
   void initState() {
     super.initState();
-    loadHomeData();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    await loadHomeData();
     _searchController.addListener(_filterAndSortBarang);
   }
-  
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  // DIKEMBALIKAN: Fungsi untuk mengambil notifikasi dari server
-  Future<void> _refreshNotifications() async {
-    try {
-      final data = await NotifikasiService.fetchNotifikasi();
-      if(mounted) setState(() => _notifications = data);
-    } catch (e) {
-      print("Gagal mengambil notifikasi: $e");
-    }
-  }
-
   Future<void> loadHomeData() async {
     setState(() => _isLoading = true);
     try {
       final kategoriRes = await HomeService.fetchKategori();
-      final barangRes = await HomeService.fetchBarang(); 
+      final barangRes = await HomeService.fetchBarang();
       if (mounted) {
         setState(() {
           kategori = kategoriRes;
@@ -72,11 +56,16 @@ class _HomePenitipState extends State<HomePenitip> {
         });
       }
     } catch (e) {
-      print('❌ Gagal load data: $e');
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      print('Error loading home data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data: $e')),
+      );
     }
   }
-  
+
   void _filterAndSortBarang() {
     List<dynamic> tempBarang = List.from(_allBarang);
 
@@ -111,98 +100,68 @@ class _HomePenitipState extends State<HomePenitip> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildBeranda(),
-      const RiwayatPenitipanView(),
-      const ProfilePenitip(),
-    ];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: _isLoading && _selectedIndex == 0
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF005E34),
-        unselectedItemColor: Colors.grey[600],
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
-      ),
+          : RefreshIndicator(
+              onRefresh: loadHomeData,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // TAMBAHKAN KEMBALI: Widget untuk carousel banner
+                  AspectRatio(
+                    aspectRatio: 16 / 7, // Sesuaikan rasio agar pas
+                    child: PageView(
+                      children: [
+                        _carouselItem('images/banner1.jpg'),
+                        _carouselItem('images/banner2.jpg'),
+                        _carouselItem('images/banner3.jpg'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Text('Kategori', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  _buildKategoriList(),
+                  const SizedBox(height: 20),
+                  _buildSortButtons(),
+                  const SizedBox(height: 20),
+                  const Text('Rekomendasi Untuk Anda', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  _buildBarangGrid(),
+                ],
+              ),
+            ),
     );
   }
 
   AppBar _buildAppBar() {
-    if (_selectedIndex != 0) {
-      return AppBar(
-        title: Text(
-          _selectedIndex == 1 ? 'Riwayat Penitipan' : 'Profil Saya',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF005E34),
-        automaticallyImplyLeading: false,
-      );
-    }
-    
     return AppBar(
       backgroundColor: const Color(0xFF005E34),
       title: _buildSearchBar(),
       actions: [
-        // DIKEMBALIKAN: Tombol Notifikasi
-        IconButton(
-          icon: const Icon(Icons.notifications_none, color: Colors.white),
-          onPressed: () async {
-            await _refreshNotifications();
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text("Notifikasi"),
-                content: _notifications.isEmpty
-                    ? const Text("Tidak ada notifikasi saat ini.")
-                    : SizedBox( // Gunakan SizedBox agar bisa scroll jika notif banyak
-                        width: double.maxFinite,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _notifications.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: const Icon(Icons.notifications),
-                              title: Text(_notifications[index]),
-                            );
-                          },
-                        ),
-                      ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Tutup"),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.leaderboard_outlined, color: Colors.white),
-          tooltip: 'Top Seller',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TopSellerView()),
-            );
-          },
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginView()),
+              );
+            },
+            child: const Text(
+              'Login',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  // ... (Sisa kode tidak ada perubahan, tetap sama seperti sebelumnya)
   Widget _buildSearchBar() {
     return Container(
       height: 40,
@@ -213,7 +172,7 @@ class _HomePenitipState extends State<HomePenitip> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Cari barang di Reusemart...',
+          hintText: 'Cari di Reusemart...',
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -227,42 +186,16 @@ class _HomePenitipState extends State<HomePenitip> {
       ),
     );
   }
-  
-  Widget _buildBeranda() {
-    return RefreshIndicator(
-      onRefresh: loadHomeData,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 7,
-            child: PageView(
-              children: [
-                _carouselItem('images/banner1.jpg'),
-                _carouselItem('images/banner2.jpg'),
-                _carouselItem('images/banner3.jpg'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text('Kategori', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          _buildKategoriList(),
-          const SizedBox(height: 20),
-          _buildSortButtons(),
-          const SizedBox(height: 20),
-          const Text('Semua Barang', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          _buildBarangGrid(),
-        ],
-      ),
-    );
-  }
 
+  // TAMBAHKAN KEMBALI: Fungsi helper untuk item carousel
   Widget _carouselItem(String imagePath) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.asset(imagePath, fit: BoxFit.cover, width: double.infinity),
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        width: double.infinity,
+      ),
     );
   }
 
@@ -312,15 +245,21 @@ class _HomePenitipState extends State<HomePenitip> {
           final bool isSelected = _selectedKategoriId == item['id_kategori'];
           return GestureDetector(
             onTap: () {
-              setState(() => _selectedKategoriId = isSelected ? null : item['id_kategori']);
+              setState(() {
+                _selectedKategoriId = isSelected ? null : item['id_kategori'];
+              });
               _filterAndSortBarang();
             },
             child: Container(
-              width: 100, margin: const EdgeInsets.only(right: 12),
+              width: 100,
+              margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
                 color: isSelected ? const Color(0xFF005E34) : const Color(0xFFE1DDD2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? Colors.white : Colors.green.shade700, width: 1.5),
+                border: Border.all(
+                  color: isSelected ? Colors.white : Colors.green.shade700,
+                  width: 1.5,
+                ),
               ),
               padding: const EdgeInsets.all(8),
               child: Column(
@@ -328,7 +267,14 @@ class _HomePenitipState extends State<HomePenitip> {
                 children: [
                   Expanded(child: Image.network(imageUrl, fit: BoxFit.contain)),
                   const SizedBox(height: 5),
-                  Text(item['kategori'], style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : Colors.black), textAlign: TextAlign.center),
+                  Text(
+                    item['kategori'],
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
@@ -343,15 +289,23 @@ class _HomePenitipState extends State<HomePenitip> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32.0),
-          child: Text('Barang tidak ditemukan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey)),
+          child: Text(
+            'Barang tidak ditemukan.\nCoba kata kunci atau filter lain.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
         ),
       );
     }
     return GridView.builder(
-      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: _filteredBarang.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.7,
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.7,
       ),
       itemBuilder: (context, index) {
         final item = _filteredBarang[index];
@@ -360,14 +314,25 @@ class _HomePenitipState extends State<HomePenitip> {
             : 'https://via.placeholder.com/160?text=No+Image';
         return GestureDetector(
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => DetailBarangView(barang: item)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailBarangView(barang: item),
+              ),
+            );
           },
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(12),
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,9 +348,21 @@ class _HomePenitipState extends State<HomePenitip> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['nama_barang'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text(
+                        item['nama_barang'],
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: 4),
-                      Text(formatter.format(item['harga_barang']), style: const TextStyle(color: Color(0xFF005E34), fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        formatter.format(item['harga_barang']),
+                        style: const TextStyle(
+                          color: Color(0xFF005E34),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                 ),

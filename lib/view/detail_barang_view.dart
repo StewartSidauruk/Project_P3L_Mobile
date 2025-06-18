@@ -40,34 +40,66 @@ class _DetailBarangViewState extends State<DetailBarangView> {
     });
   }
 
+Widget _buildInfoWidget({required String text, required IconData icon, required Color color}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min, // Agar container tidak memenuhi lebar layar
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   // TAMBAHKAN: Widget baru untuk status garansi
   Widget _buildWarrantyStatus(String? garansiString) {
-    // Jika data garansi tidak ada atau kosong, jangan tampilkan apa-apa
+    // 1. Cek jika data garansi tidak ada (null atau string kosong).
     if (garansiString == null || garansiString.isEmpty) {
-      return const SizedBox.shrink(); // Widget kosong
+      return _buildInfoWidget(
+        text: 'Barang Ini Tidak Memiliki Garansi',
+        icon: Icons.gpp_maybe_outlined, // Icon netral untuk status "tidak ada"
+        color: Colors.grey.shade700,
+      );
     }
 
-    // Coba parse tanggal dari string
+    // 2. Coba parse tanggal dari string. Jika format salah, tampilkan pesan error.
     final garansiDate = DateTime.tryParse(garansiString);
     if (garansiDate == null) {
-      return const SizedBox.shrink(); // Format tanggal tidak valid
+      return _buildInfoWidget(
+        text: 'Informasi Garansi Tidak Valid',
+        icon: Icons.error_outline,
+        color: Colors.orange.shade800,
+      );
     }
 
-    // Dapatkan tanggal hari ini tanpa informasi waktu
+    // 3. Bandingkan tanggal garansi dengan tanggal hari ini.
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final warrantyDay = DateTime(garansiDate.year, garansiDate.month, garansiDate.day);
-
-    // Cek apakah garansi sudah kedaluwarsa (tanggal garansi sebelum hari ini)
     final bool isExpired = warrantyDay.isBefore(today);
 
-    // Format tanggal untuk ditampilkan (misal: 11 Juni 2025)
+    // 4. Siapkan teks, warna, dan ikon berdasarkan status garansi.
     final formattedDate = DateFormat('d MMMM yyyy', 'id_ID').format(garansiDate);
-
     final Color badgeColor = isExpired ? Colors.red.shade700 : Colors.green.shade700;
-    final String statusText = isExpired ? 'Garansi telah habis' : 'Garansi berlaku hingga';
+    final String statusText = isExpired ? 'Garansi telah habis pada' : 'Garansi berlaku hingga';
     final IconData icon = isExpired ? Icons.gpp_bad_outlined : Icons.verified_user_outlined;
 
+    // 5. Kembalikan widget untuk status garansi yang valid.
     return Padding(
       padding: const EdgeInsets.only(top: 16.0),
       child: Container(
@@ -78,7 +110,7 @@ class _DetailBarangViewState extends State<DetailBarangView> {
           border: Border.all(color: badgeColor.withOpacity(0.5)),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min, // Agar container tidak memenuhi lebar layar
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: badgeColor, size: 20),
             const SizedBox(width: 8),

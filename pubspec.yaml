@@ -31,8 +31,11 @@ dependencies:
   flutter_dotenv: ^5.0.2
   decimal: ^2.0.0
   flutter_secure_storage: ^9.2.4
-  firebase_core: ^2.0.0
-  firebase_messaging: ^14.0.0
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.10
+  flutter_local_notifications: ^19.2.1
+  permission_handler: ^11.0.0
+  month_picker_dialog: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -42,4 +45,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - images/
     - images/logo.png
+    - images/banner1.jpg
+    - images/banner2.jpg
+    - images/banner3.jpg
+    - images/fox-avatar.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/logo.png"

@@ -8,6 +8,8 @@ import 'package:flutter_application_p3l/view/home_pembeli.dart';
 import 'package:flutter_application_p3l/view/home_penitip.dart';
 import 'package:flutter_application_p3l/view/home_hunter.dart';
 import 'package:flutter_application_p3l/view/home_kurir.dart';
+import 'package:flutter_application_p3l/main.dart';
+import 'package:flutter_application_p3l/auth/auth.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -80,33 +82,43 @@ class _LoginViewState extends State<LoginView> {
                         final response = await AuthService.login(
                           email: emailController.text,
                           password: passwordController.text,
-                          role: selectedValue,
                         );
 
                         if (response['status'] == 'success' && mounted) {
                           final role = response['role'];
 
                           if (role == 'pembeli') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePembeli()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomePembeli()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'penitip') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePenitip()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomePenitip()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'hunter') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeHunter()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeHunter()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else if (role == 'kurir') {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeKurir()));
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeKurir()),
+                              (Route<dynamic> route) => false, // Predikat 'false' akan menghapus semua rute sebelumnya
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Role tidak dikenal")),
                             );
                           }
                         } else {
-                          // 🔔 Menampilkan notifikasi error jika login gagal
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(response['message'] ?? 'Login gagal'),
-                              backgroundColor: Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                            SnackBar(content: Text(response['message'] ?? 'Login gagal')),
                           );
                         }
                       }

@@ -8,7 +8,7 @@ class NotifikasiService {
     final token = await storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('https://yourdomain.com/api/penitip/notifikasi'),
+      Uri.parse('https://projectp3l-production.up.railway.app/api/penitip/notifikasi'),
       headers: {
         'Authorization': 'Bearer $token',
         'Accept': 'application/json',
@@ -21,5 +21,19 @@ class NotifikasiService {
     } else {
       throw Exception('Gagal memuat notifikasi');
     }
+  }
+  static Future<void> simpanTokenFCM(String token) async {
+    final storage = FlutterSecureStorage();
+    final jwt = await storage.read(key: 'token');
+
+    await http.post(
+      Uri.parse('http://10.0.2.2:8000/api/simpan-token'),
+      headers: {
+        'Authorization': 'Bearer $jwt',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'expo_push_token': token}),
+    );
   }
 }

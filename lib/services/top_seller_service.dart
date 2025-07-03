@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class TopSellerService {
-  static const String _baseUrl = 'http://10.0.2.2:8000/api';
+  static const String _baseUrl = 'https://projectp3l-production.up.railway.app/api';
 
   // Fungsi diubah untuk menerima parameter tanggal
   static Future<List<dynamic>> fetchTopSellers(DateTime periode) async {

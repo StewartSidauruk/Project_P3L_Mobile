@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/transaksi_pengiriman.dart';
 
 class PengirimanService {
-  static const String apiUrl = 'http://10.0.2.2:8000/api/kurir/pengiriman'; // ubah IP jika pakai device fisik
+  static const String apiUrl = 'https://projectp3l-production.up.railway.app/api/kurir/pengiriman'; // ubah IP jika pakai device fisik
 
   static Future<List<TransaksiPengiriman>> fetchPengiriman() async {
     final storage = FlutterSecureStorage();

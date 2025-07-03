@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthService {
-  static const _baseUrl = "http://10.0.2.2:8000/api";
+  static const _baseUrl = "https://projectp3l-production.up.railway.app/api";
   static final storage = FlutterSecureStorage();
 
   static Future<Map<String, dynamic>> login({

@@ -58,7 +58,7 @@ factory BarangPengiriman.fromJson(Map<String, dynamic> json) {
     final List<dynamic>? images = json['images'];
     String? imageUrl;
     if (images != null && images.isNotEmpty) {
-      imageUrl = "http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(images[0]['directory'])}"; // Prepend base URL
+      imageUrl = "https://projectp3l-production.up.railway.app/gambarBarang/${Uri.encodeComponent(images[0]['directory'])}"; // Prepend base URL
     }
 
     return BarangPengiriman(

@@ -26,7 +26,7 @@ class _ProfilePembeliState extends State<ProfilePembeli> {
   Future<void> fetchProfile() async {
     final token = await storage.read(key: 'token');
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/me'),
+      Uri.parse('https://projectp3l-production.up.railway.app/api/me'),
       headers: {'Authorization': 'Bearer $token'},
     );
 

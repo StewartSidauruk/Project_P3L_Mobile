@@ -8,7 +8,7 @@ class NotifikasiService {
     final token = await storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/penitip/notifikasi'),
+      Uri.parse('https://projectp3l-production.up.railway.app/api/penitip/notifikasi'),
       headers: {
         'Authorization': 'Bearer $token',
         'Accept': 'application/json',

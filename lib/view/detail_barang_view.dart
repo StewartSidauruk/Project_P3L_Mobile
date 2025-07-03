@@ -25,7 +25,7 @@ class _DetailBarangViewState extends State<DetailBarangView> {
     if (widget.barang['images'] != null && (widget.barang['images'] as List).isNotEmpty) {
       for (var image in widget.barang['images']) {
         final fileName = Uri.encodeComponent(image['directory']);
-        _imageUrls.add('http://10.0.2.2:8000/gambarBarang/$fileName');
+        _imageUrls.add('https://projectp3l-production.up.railway.app/gambarBarang/$fileName');
       }
       _mainImageUrl = _imageUrls.first;
     } else {

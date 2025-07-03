@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/kurir.dart';
 
 class KurirService {
-  static const String apiUrl = 'http://10.0.2.2:8000/api/kurir/me';
+  static const String apiUrl = 'https://projectp3l-production.up.railway.app/api/kurir/me';
 
   static Future<Kurir> fetchProfil() async {
     final storage = FlutterSecureStorage();

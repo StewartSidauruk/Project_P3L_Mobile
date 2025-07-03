@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class MerchandiseService {
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'https://projectp3l-production.up.railway.app/api';
   static final storage = FlutterSecureStorage();
 
   static Future<List<dynamic>> fetchMerchandise() async {

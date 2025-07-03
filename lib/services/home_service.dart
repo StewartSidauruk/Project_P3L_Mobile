@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class HomeService {
-  static const String baseUrl = 'http://10.0.2.2:8000/api'; // ganti jika perlu
+  static const String baseUrl = 'https://projectp3l-production.up.railway.app/api'; // ganti jika perlu
 
   static Future<List<dynamic>> fetchBarang() async {
     final response = await http.get(Uri.parse('$baseUrl/barang'));

@@ -32,7 +32,7 @@ class _RiwayatTransaksiPembelianState extends State<RiwayatTransaksiPembelian> {
     try {
       final token = await storage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/pembeli/transaksi'),
+        Uri.parse('https://projectp3l-production.up.railway.app/api/pembeli/transaksi'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -171,7 +171,7 @@ class _RiwayatTransaksiPembelianState extends State<RiwayatTransaksiPembelian> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                      "http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(gambar)}",
+                      "https://projectp3l-production.up.railway.app/gambarBarang/${Uri.encodeComponent(gambar)}",
                       width: 50,
                       height: 50,
                       fit: BoxFit.cover,
@@ -396,7 +396,7 @@ class DetailTransaksiPembelian extends StatelessWidget {
 
     final images = barang['images'] as List<dynamic>? ?? [];
     final gambarUrl = images.isNotEmpty
-        ? "http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(images[0]['directory'])}"
+        ? "https://projectp3l-production.up.railway.app/gambarBarang/${Uri.encodeComponent(images[0]['directory'])}"
         : null;
 
     return Padding(

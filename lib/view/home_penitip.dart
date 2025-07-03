@@ -308,7 +308,7 @@ class _HomePenitipState extends State<HomePenitip> {
         itemCount: kategori.length,
         itemBuilder: (context, index) {
           final item = kategori[index];
-          final imageUrl = 'http://10.0.2.2:8000/images/${Uri.encodeComponent(item['gambar'])}';
+          final imageUrl = 'https://projectp3l-production.up.railway.app/images/${Uri.encodeComponent(item['gambar'])}';
           final bool isSelected = _selectedKategoriId == item['id_kategori'];
           return GestureDetector(
             onTap: () {
@@ -356,7 +356,7 @@ class _HomePenitipState extends State<HomePenitip> {
       itemBuilder: (context, index) {
         final item = _filteredBarang[index];
         final imageUrl = (item['images'] != null && (item['images'] as List).isNotEmpty)
-            ? 'http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(item['images'][0]['directory'])}'
+            ? 'https://projectp3l-production.up.railway.app/gambarBarang/${Uri.encodeComponent(item['images'][0]['directory'])}'
             : 'https://via.placeholder.com/160?text=No+Image';
         return GestureDetector(
           onTap: () {

@@ -106,7 +106,7 @@ class _RiwayatPenitipanViewState extends State<RiwayatPenitipanView> {
     final idTransaksi = transaksi['id_transaksi_penitipan'].toString();
     final firstBarang = detailList.first['barang'];
     final imageUrl = firstBarang['images'].isNotEmpty
-        ? 'http://10.0.2.2:8000/gambarBarang/${Uri.encodeComponent(firstBarang['images'][0]['directory'])}'
+        ? 'https://projectp3l-production.up.railway.app/gambarBarang/${Uri.encodeComponent(firstBarang['images'][0]['directory'])}'
         : null;
     
     final tanggal = DateTime.parse(transaksi['tanggal_transaksi']);

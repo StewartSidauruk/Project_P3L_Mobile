@@ -89,7 +89,7 @@ Future<void> simpanTokenFcmKeBackend() async {
 
   if (fcmToken != null && jwt != null) {
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/api/simpan-token'),
+      Uri.parse('https://projectp3l-production.up.railway.app/api/simpan-token'),
       headers: {
         'Authorization': 'Bearer $jwt',
         'Accept': 'application/json',
@@ -131,7 +131,7 @@ void main() async {
   final token = await storage.read(key: 'token');
   if (fcmToken != null && token != null) {
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/api/simpan-token'),
+      Uri.parse('https://projectp3l-production.up.railway.app/api/simpan-token'),
       headers: {
         'Authorization': 'Bearer $token',
         'Accept': 'application/json',

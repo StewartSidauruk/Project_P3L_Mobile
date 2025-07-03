@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class PenitipService {
   // ✅ SOLUSI: Samakan format baseUrl seperti di HomeService (tanpa / di akhir)
-  static const String _baseUrl = 'http://10.0.2.2:8000/api'; 
+  static const String _baseUrl = 'https://projectp3l-production.up.railway.app/api'; 
   static final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   static Future<List<dynamic>> fetchRiwayatPenitipan() async {

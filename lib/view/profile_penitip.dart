@@ -30,7 +30,7 @@ class _ProfilePenitipState extends State<ProfilePenitip> {
     if (token == null) return;
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/me'),
+        Uri.parse('https://projectp3l-production.up.railway.app/api/me'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
